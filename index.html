@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Demo: Enumeration</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Using Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for the console */
+        #console-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        #console-output::-webkit-scrollbar-track {
+            background: #1f2937; /* gray-800 */
+        }
+        #console-output::-webkit-scrollbar-thumb {
+            background: #4b5563; /* gray-600 */
+            border-radius: 4px;
+        }
+        #console-output::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* gray-500 */
+        }
+        /* Blinking cursor effect */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2em;
+            background-color: #34d399; /* emerald-400 */
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            from, to { background-color: transparent }
+            50% { background-color: #34d399; } /* emerald-400 */
+        }
+        /* Allow text selection in console */
+        .select-text { 
+            user-select: text; 
+            -webkit-user-select: text; 
+            -moz-user-select: text; 
+        }
+    </style>
+    <!-- Add Inter font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body class="bg-gray-900 text-gray-200 h-full flex items-center justify-center p-4">
+
+    <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-700">
+            <h1 class="text-2xl font-bold text-white">Cybersecurity Demo: Enumeration</h1>
+            <p class="mt-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-100">
+                <strong>Disclaimer:</strong> This is a simulated demo for educational purposes only. Do not run these commands or techniques against any system you do not own or have explicit permission to test.
+            </p>
+            <p class="mt-3 text-gray-400">
+                Enumeration is the process where an attacker actively gathers specific details about a target, such as usernames, network shares, services, and web pages. This demo simulates what that process looks like.
+            </p>
+        </div>
+
+        <!-- Controls -->
+        <div class="p-6 space-y-4">
+            <div>
+                <label for="target-ip" class="block text-sm font-medium text-gray-300">Target IP</label>
+                <input type="text" id="target-ip" value="127.0.0.1" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="mt-1 text-xs text-gray-500">Default set to localhost (this machine). Use a lab/VM IP if you have one.</p>
+            </div>
+            
+            <!-- Scan Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <button id="scan-ports" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    1. Scan Ports
+                </button>
+                <button id="enum-users" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    2. Enumerate Users
+                </button>
+                <button id="find-shares" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    3. Find Shares (SMB)
+                </button>
+                <button id="find-web" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    4. Find Web Dirs
+                </button>
+                <button id="view-logs" class="w-full bg-green-700 hover:bg-green-800 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    5. View Defender Logs
+                </button>
+                <button id="clear-console" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    Clear Console
+                </button>
+            </div>
+        </div>
+
+        <!-- Console Output -->
+        <div class="p-6 bg-black">
+            <label class="text-sm font-medium text-gray-400">Attacker Console:</label>
+            <div class="mt-2 w-full h-64 bg-gray-900 rounded-lg p-4 font-mono text-sm overflow-y-auto select-text" id="console-output" role="region" aria-live="polite" aria-label="Attacker console output">
+                <span class="text-gray-500">Awaiting commands...</span>
+            </div>
+            <div id="cursor-container" class="hidden h-5">
+                <span class="text-green-400">&gt; </span>
+                <span id="prompt-line"></span>
+                <span class="cursor"></span>
+            </div>
+        </div>
+
+        <!-- Next Steps / Ethics -->
+        <div class="p-6 border-t border-gray-700">
+            <h2 class="text-xl font-bold text-white">What's Next? (And Why We Stop Here)</h2>
+            <p class="mt-2 text-gray-400">After enumeration, an attacker would try to exploit the findings:</p>
+            <ul class="list-disc list-inside text-gray-400 mt-2 space-y-1">
+                <li><span class="font-medium text-gray-300">Password Guessing:</span> Use the user list (`j.smith`, `admin`) to try and guess passwords for SSH, FTP, or the `/login.php` page.</li>
+                <li><span class="font-medium text-gray-300">Exploit Searching:</span> Search for public exploits (like on CVE databases) for "vsftpd 3.0.3" or the exposed ".git" vulnerability.</li>
+                <li><span class="font-medium text-gray-300">Analyze Backups:</span> Download files from the `[dev_backups]` share to look for passwords, code, or other secrets.</li>
+            </ul>
+            <p class="mt-3 text-yellow-300 font-medium">
+                <strong class="text-yellow-200">Ethical/Legal Boundary:</strong> This demo stops at information gathering. The *very next step*—attempting to gain access—is illegal and unethical without explicit authorization. This simulation is for defenders to understand what to look for and how to protect their systems.
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // Get DOM elements
+        const consoleOutput = document.getElementById('console-output');
+        const cursorContainer = document.getElementById('cursor-container');
+        const promptLine = document.getElementById('prompt-line');
+        const getTargetIp = () => document.getElementById('target-ip').value || '127.0.0.1'; // Use 127.0.0.1 as fallback
+
+        let isScanning = false;
+        const SIM_ATTACKER = '[SIMULATED_ATTACKER_IP]';
+
+        // --- Helper Function ---
+        // Escape HTML to prevent XSS from user input
+        function escapeHtml(unsafe) {
+            return String(unsafe)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        // --- Scan Data ---
+        // Each array of strings represents a "scan". We'll type these out.
+        const portScanData = () => {
+            const ip = escapeHtml(getTargetIp());
+            return [
+                `[+] Starting Port Scan on ${ip}...`,
+                `[+] Simulating command: <span class='text-cyan-400'>nmap -sV ${ip}</span>`,
+                `[+] Scan running...`,
+                `[+] Scan Complete.`,
+                `[+] Open Ports Found:`,
+                `[+]    21/tcp   - <span class='text-yellow-400'>FTP</span> (vsftpd 3.0.3) - <span class='text-red-500'>Potentially vulnerable version.</span> Verify with CVE database.`,
+                `[+]    22/tcp   - <span class='text-green-400'>SSH</span> (OpenSSH 7.6p1)`,
+                `[+]    80/tcp   - <span class='text-green-400'>HTTP</span> (Apache httpd 2.4.29)`,
+                `[+]    139/tcp  - <span class='text-yellow-400'>NetBIOS-SSN</span> (Samba)`,
+                `[+]    445/tcp  - <span class='text-yellow-400'>Microsoft-DS</span> (Samba)`,
+                `[+]    3306/tcp - <span class='text-yellow-400'>MySQL</span> (Community Server 8.0.2)`,
+                `[+] Enumeration complete.`
+            ];
+        };
+
+        const userEnumData = () => {
+            const ip = escapeHtml(getTargetIp());
+            return [
+                `[+] Enumerating users via RPC from ${ip}...`,
+                `[+] Simulating command: <span class='text-cyan-400'>enum4linux -U ${ip}</span>`,
+                `[+] Target OS: Linux (Samba)`,
+                `[+] Found Users:`,
+                `[+]    - root (UID: 0)`,
+                `[+]    - <span class='text-yellow-400'>admin</span> (UID: 1000)`,
+                `[+]    - <span class='text-yellow-400'>j.smith</span> (UID: 1001)`,
+                `[+]    - <span class='text-yellow-400'>a.johnson</span> (UID: 1002)`,
+                `[+]    - web_svc (UID: 1003)`,
+                `[+]    - mysql_svc (UID: 1004)`,
+                `[+] User list gathered. Ready for password attacks.`
+            ];
+        };
+        
+        const shareEnumData = () => {
+            const ip = escapeHtml(getTargetIp());
+            return [
+                `[+] Enumerating SMB shares on ${ip}...`,
+                `[+] Simulating command: <span class='text-cyan-400'>smbclient -L //${ip} -N</span>`,
+                `[+] Connecting as anonymous...`,
+                `[+] Connection successful!`,
+                `[+] Found Shares:`,
+                `[+]    - [IPC$] - (Remote IPC)`,
+                `[+]    - [ADMIN$] - (Remote Admin) <span class='text-red-500'>Access Denied</span>`,
+                `[+]    - <span class='text-yellow-400'>[public]</span> - (Anonymous <span class='text-green-400'>READ</span> Access) <span class='text-yellow-400'>&lt;-- Interesting!</span>`,
+                `[+]    - <span class='text-yellow-400'>[dev_backups]</span> - (Anonymous <span class='text-green-400'>READ/WRITE</span>) <span class='text-red-500'>&lt;-- High Value Target!</span>`,
+                `[+] Enumeration complete.`
+            ];
+        };
+
+        const webEnumData = () => {
+            const ip = escapeHtml(getTargetIp());
+            return [
+                `[+] Starting web directory enumeration on http://${ip}/`,
+                `[+] Simulating command: <span class='text-cyan-400'>gobuster dir -u http://${ip}/ -w common.txt</span>`,
+                `[+] Using common.txt wordlist...`,
+                `[+] Found: / (Status: 200)`,
+                `[+] Found: /images (Status: 200)`,
+                `[+] Found: /css (Status: 200)`,
+                `[+] Found: /js (Status: 200)`,
+                `[+] Found: /README.txt (Status: 200)`,
+                `[+] Found: <span class='text-red-500'>/admin</span> (Status: 403 - Forbidden) <span class='text-yellow-400'>&lt;-- Found, but protected.</span>`,
+                `[+] Found: <span class='text-yellow-400'>/uploads</span> (Status: 200)`,
+                `[+] Found: /config (Status: 404)`,
+                `[+] Found: <span class='text-yellow-400'>/login.php</span> (Status: 200)`,
+                `[+] Found: <span class='text-red-500'>/.git</span> (Status: 200) <span class='text-red-500'>&lt;-- CRITICAL! Source code exposed.</span>`,
+                `[+] Web enumeration complete.`
+            ];
+        };
+
+        // --- NEW DATA for Defender Logs ---
+        const defenderLogData = () => {
+            const ip = escapeHtml(getTargetIp());
+            return [
+                `[+] Displaying relevant logs from defender's perspective (SIEM/IDS)...`,
+                `[+] <span class='text-yellow-400'>[Firewall/IDS Alert]</span> - High port scan activity detected from <span class='text-red-500'>${SIM_ATTACKER}</span> to ${ip}.`,
+                `[+] <span class='text-gray-400'>[auth.log]</span> - Failed login attempt for user 'admin' via SSH from <span class='text-red-500'>${SIM_ATTACKER}</span>.`,
+                `[+] <span class='text-gray-400'>[auth.log]</span> - Failed login attempt for user 'j.smith' via SSH from <span class='text-red-500'>${SIM_ATTACKER}</span>.`,
+                `[+] <span class='text-yellow-400'>[SMB Log]</span> - Anonymous connection to share <span class='text-green-400'>[public]</span> from <span class='text-red-500'>${SIM_ATTACKER}</span>.`,
+                `[+] <span class='text-red-500'>[SMB Alert]</span> - Anonymous WRITE access to share <span class='text-green-400'>[dev_backups]</span> from <span class='text-red-500'>${SIM_ATTACKER}</span>.`,
+                `[+] <span class='text-yellow-400'>[Web Server Log]</span> - 403 Forbidden access attempt to <span class='text-green-400'>/admin</span> from <span class="text-red-500">${SIM_ATTACKER}</span>.`,
+                `[+] <span class='text-red-500'>[Web Server Alert]</span> - 200 OK for <span class='text-green-400'>/.git</span> from <span class="text-red-500">${SIM_ATTACKER}</span>. Critical data exposure.`,
+                `[+] Log review complete. Blue team is now aware of the activity.`
+            ];
+        };
+
+        // --- Helper Functions ---
+
+        // Utility to sleep for a given time
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Main function to run a simulated scan
+        async function runScan(scanData, commandName) {
+            if (isScanning) return;
+            isScanning = true;
+            
+            // Clear console and show cursor
+            consoleOutput.innerHTML = '';
+            cursorContainer.classList.remove('hidden');
+            promptLine.textContent = `Running ${commandName}...`;
+            
+            // Disable buttons
+            document.querySelectorAll('button').forEach(b => b.disabled = true);
+            
+            // Type out each line
+            for (const line of scanData) {
+                const p = document.createElement('p');
+                p.innerHTML = line;
+                consoleOutput.appendChild(p);
+                // Scroll to bottom
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                await sleep(Math.random() * 200 + 100); // Random delay
+            }
+            
+            // Done
+            promptLine.textContent = `Done.`;
+            await sleep(500);
+            cursorContainer.classList.add('hidden');
+            
+            // Re-enable buttons
+            document.querySelectorAll('button').forEach(b => b.disabled = false);
+            isScanning = false;
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('scan-ports').addEventListener('click', () => {
+            runScan(portScanData(), 'port-scan');
+        });
+
+        document.getElementById('enum-users').addEventListener('click', () => {
+            runScan(userEnumData(), 'user-enum');
+        });
+        
+        document.getElementById('find-shares').addEventListener('click', () => {
+            runScan(shareEnumData(), 'share-enum');
+        });
+        
+        document.getElementById('find-web').addEventListener('click', () => {
+            runScan(webEnumData(), 'web-dir-scan');
+        });
+
+        document.getElementById('view-logs').addEventListener('click', () => {
+            runScan(defenderLogData(), 'log-review');
+        });
+
+        document.getElementById('clear-console').addEventListener('click', () => {
+            if (isScanning) return;
+            consoleOutput.innerHTML = '<span class="text-gray-500">Awaiting commands...</span>';
+            promptLine.textContent = '';
+            cursorContainer.classList.add('hidden');
+        });
+
+    </script>
+</body>
+</html>
+
