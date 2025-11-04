@@ -49,9 +49,10 @@
     <!-- Add Inter font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 </head>
-<body class="bg-gray-900 text-gray-200 p-4 md:py-12">
+<body class="bg-gray-900 text-gray-200 p-4 md:py-12 min-h-screen">
 
-    <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden mx-auto">
+    <!-- Removed overflow-hidden so content won't be clipped when the page is taller than viewport -->
+    <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl overflow-visible mx-auto pb-12">
         <!-- Header -->
         <div class="p-6 border-b border-gray-700">
             <h1 class="text-2xl font-bold text-white">Cybersecurity Demo: Enumeration</h1>
@@ -97,7 +98,8 @@
         <!-- Console Output -->
         <div class="p-6 bg-black">
             <label class="text-sm font-medium text-gray-400">Attacker Console:</label>
-            <div class="mt-2 w-full h-64 bg-gray-900 rounded-lg p-4 font-mono text-sm overflow-y-auto select-text" id="console-output" role="region" aria-live="polite" aria-label="Attacker console output">
+            <!-- make console taller on larger screens so content fits without forcing the whole card taller than the viewport -->
+            <div class="mt-2 w-full h-64 md:h-72 lg:h-80 bg-gray-900 rounded-lg p-4 font-mono text-sm overflow-y-auto select-text" id="console-output" role="region" aria-live="polite" aria-label="Attacker console output">
                 <span class="text-gray-500">Awaiting commands...</span>
             </div>
             <div id="cursor-container" class="hidden h-5">
@@ -145,7 +147,6 @@
         }
 
         // --- Scan Data ---
-        // Each array of strings represents a "scan". We'll type these out.
         const portScanData = () => {
             const ip = escapeHtml(getTargetIp());
             return [
@@ -217,7 +218,6 @@
             ];
         };
 
-        // --- NEW DATA for Defender Logs ---
         const defenderLogData = () => {
             const ip = escapeHtml(getTargetIp());
             return [
@@ -228,12 +228,10 @@
                 `[+] <span class='text-yellow-400'>[SMB Log]</span> - Anonymous connection to share <span class='text-green-400'>[public]</span> from <span class='text-red-500'>${SIM_ATTACKER}</span>.`,
                 `[+] <span class='text-red-500'>[SMB Alert]</span> - Anonymous WRITE access to share <span class='text-green-400'>[dev_backups]</span> from <span class='text-red-500'>${SIM_ATTACKER}</span>.`,
                 `[+] <span class='text-yellow-400'>[Web Server Log]</span> - 403 Forbidden access attempt to <span class='text-green-400'>/admin</span> from <span class="text-red-500">${SIM_ATTACKER}</span>.`,
-                `[+] <span class='text-red-500'>[Web Server Alert]</span> - 200 OK for <span class='text-green-400'>/.git</span> from <span class="text-red-500">${SIM_ATTACKER}</span>. Critical data exposure.`,
+                `[+] <span class='text-red-500'>[Web Server Alert]</span> - 200 OK for <span class='text-green-400'>/.git</span> from <span class='text-red-500'>${SIM_ATTACKER}</span>. Critical data exposure.`,
                 `[+] Log review complete. Blue team is now aware of the activity.`
             ];
         };
-
-        // --- Helper Functions ---
 
         // Utility to sleep for a given time
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -302,5 +300,3 @@
     </script>
 </body>
 </html>
-
-
